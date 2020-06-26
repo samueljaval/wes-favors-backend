@@ -34,7 +34,7 @@ favorsRouter.post("/", async (req, res, next) => {
             price: body.price,
             likes: 0,
             location: body.location,
-            when: body.date_time,
+            date_time: body.date_time,
             accepted: false,
             completed: false,
             paid: false,
