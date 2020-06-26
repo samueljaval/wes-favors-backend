@@ -22,7 +22,6 @@ favorsRouter.post("/", async (req, res, next) => {
           return response.status(401).json({ error: 'token missing or invalid' })
         }
         const user = await User.findById(decodedToken.id)
-        console.log(user)
 
         if (!body.title || !body.details) {
             return res.status(400).send({error: "either the title or the details of the favor is missing"})
@@ -32,13 +31,15 @@ favorsRouter.post("/", async (req, res, next) => {
             title: body.title,
             details: body.details,
             price: body.price,
-            likes: 0,
-            location: body.location,
-            date_time: body.date_time,
+            // likes: 0,
+            // location: body.location,
+            posted_date_time : body.posted_date_time,
+            expiration_date_time : body.expiration_date_time,
             accepted: false,
-            completed: false,
-            paid: false,
-            completer_rating: -1,
+            comments: [],
+            // completed: false,
+            // paid: false,
+            // completer_rating: -1,
             requester: user._id
         })
             const savedFavor = await favor.save()
