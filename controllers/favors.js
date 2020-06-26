@@ -32,7 +32,7 @@ favorsRouter.post("/", async (req, res, next) => {
             details: body.details,
             price: body.price,
             // likes: 0,
-            // location: body.location,
+            location: body.location,
             posted_date_time : body.posted_date_time,
             expiration_date_time : body.expiration_date_time,
             accepted: false,

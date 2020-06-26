@@ -20,7 +20,7 @@ const favorSchema = mongoose.Schema({
 	price: Number,
 	comments: Array,
     // likes: Number,
-    // location: String,
+    location: String,
     accepted: Boolean,
     // completed: Boolean,
     // paid_and_rated: Boolean,
