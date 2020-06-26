@@ -4,6 +4,7 @@ const app = express()
 const cors = require("cors")
 const usersRouter = require("./controllers/users")
 const loginRouter = require("./controllers/login")
+const favorsRouter = require("./controllers/favors")
 const middleware = require("./utils/middleware")
 const logger = require("./utils/logger")
 const mongoose = require("mongoose")
@@ -24,5 +25,7 @@ app.use(middleware.requestLogger)
 
 app.use("/api/users", usersRouter)
 app.use("/api/login", loginRouter)
+app.use("/api/favors", favorsRouter)
+
 
 module.exports = app
