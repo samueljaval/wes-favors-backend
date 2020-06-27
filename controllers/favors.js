@@ -85,4 +85,16 @@ favorsRouter.delete('/:id', async (req, res) => {
 
 })
 
+favorsRouter.put('/accept/:id', async (req, res) => {
+    try {
+        const favor = await Favor.findById(req.params.id)
+        favor.accepted = true
+        await favor.save()
+        res.status(201).json({ hooray : 'successfully accepted'})
+    }
+    catch (error){
+        next(error)
+    }
+})
+
 module.exports = favorsRouter
