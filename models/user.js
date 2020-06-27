@@ -14,6 +14,12 @@ const userSchema = mongoose.Schema({
 		required : true
 		// having a minlength here is useless because the password will be big after the hash
 	},
+    favors_requested: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Favor'
+    }
+  ]
 })
 
 userSchema.set("toJSON", {
