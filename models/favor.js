@@ -15,7 +15,8 @@ const favorSchema = mongoose.Schema({
 	},
 	expiration_date_time: {
 		type : Date,
-		required : true,
+        // commenting this out for now because it's bothering me when testing
+		// required : true,
 	},
 	price: Number,
 	comments: Array,
