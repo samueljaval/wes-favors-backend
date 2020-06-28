@@ -26,9 +26,10 @@ usersRouter.post("/", async (req, res, next) => {
 
 })
 
-usersRouter.get("/", async (req, res) => {
-	users = await User.find({})
-	res.json(users.map(u => u.toJSON()))
-})
+// if we don't really need this let's not have it so that no attacker can get the list of users 
+// usersRouter.get("/", async (req, res) => {
+// 	users = await User.find({})
+// 	res.json(users.map(u => u.toJSON()))
+// })
 
 module.exports = usersRouter

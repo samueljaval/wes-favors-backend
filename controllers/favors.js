@@ -12,41 +12,45 @@ const getTokenFrom = request => {
   return null
 }
 
+const getUser = async req => {
+    const token = getTokenFrom(req)
+    const decodedToken = jwt.verify(token, process.env.SECRET)
+
+    if (!token || !decodedToken.id) {
+      return res.status(401).json({ error: 'token missing or invalid' })
+    }
+    const user = await User.findById(decodedToken.id)
+    return user
+}
+
 favorsRouter.post("/", async (req, res, next) => {
     try {
         const body = req.body
-        const token = getTokenFrom(req)
-        const decodedToken = jwt.verify(token, process.env.SECRET)
+        const user = await getUser(req)
+        console.log(user)
+        // the if user is to make sure the request was sent by an actual user through the app
+        // only wesleyan students will be able to login so that protects us from non wes students
+        if (user) {
+            if (!body.title || !body.details) {
+                return res.status(400).send({error: "either the title or the details of the favor is missing"})
+            }
 
-          if (!token || !decodedToken.id) {
-          return res.status(401).json({ error: 'token missing or invalid' })
+            const favor = new Favor({
+                title: body.title,
+                details: body.details,
+                price: body.price,
+                location: body.location,
+                posted_date_time : new Date(),
+                expiration_date_time : body.expiration_date_time,
+                accepted: false,
+                comments: [],
+                requester: user._id
+            })
+                const savedFavor = await favor.save()
+                user.favors_requested = user.favors_requested.concat(savedFavor._id)
+                await user.save()
+                res.status(201).json(savedFavor)
         }
-        const user = await User.findById(decodedToken.id)
-
-        if (!body.title || !body.details) {
-            return res.status(400).send({error: "either the title or the details of the favor is missing"})
-        }
-
-        const favor = new Favor({
-            title: body.title,
-            details: body.details,
-            price: body.price,
-            // likes: 0,
-            location: body.location,
-            posted_date_time : new Date(),
-            expiration_date_time : body.expiration_date_time,
-            accepted: false,
-            comments: [],
-            // completed: false,
-            // paid: false,
-            // completer_rating: -1,
-            requester: user._id
-        })
-            const savedFavor = await favor.save()
-            // uncomment once we start keeping track of each user's favors
-            user.favors_requested = user.favors_requested.concat(savedFavor._id)
-            await user.save()
-            res.status(201).json(savedFavor)
     }
     catch (error) {
         next(error)
@@ -54,21 +58,16 @@ favorsRouter.post("/", async (req, res, next) => {
 })
 
 favorsRouter.get("/", async (req, res) => {
-	favors = await Favor.find({})
-	res.json(favors.map(u => u.toJSON()))
+    const user = await getUser(req)
+    if (user) {
+        favors = await Favor.find({})
+    	res.json(favors.map(u => u.toJSON()))
+    }
 })
 
 favorsRouter.delete('/:id', async (req, res) => {
     try {
-        // might want to make the next 4/5 lines into a helper function since we do it multiple times
-        const token = getTokenFrom(req)
-        const decodedToken = jwt.verify(token, process.env.SECRET)
-
-        if (!token || !decodedToken.id) {
-          return res.status(401).json({ error: 'token missing or invalid' })
-        }
-
-        const user = await User.findById(decodedToken.id)
+        const user = await getUser(req)
         if (user.favors_requested.includes(req.params.id)) {
             await Favor.findByIdAndRemove(req.params.id)
             user.favors_requested = user.favors_requested.filter(favor => favor.toString() !== req.params.id)
@@ -83,6 +82,36 @@ favorsRouter.delete('/:id', async (req, res) => {
         next(error)
     }
 
+})
+
+favorsRouter.put('/accept/:id', async (req, res) => {
+    try {
+        const user = await getUser(req)
+        if (user) {
+            const favor = await Favor.findById(req.params.id)
+            favor.accepted = true
+            await favor.save()
+            res.status(201).json({ hooray : 'successfully accepted', favor : favor})
+        }
+    }
+    catch (error){
+        next(error)
+    }
+})
+
+favorsRouter.put('/comment/:id', async (req, res) => {
+    try {
+        const user = await getUser(req)
+        if (user) {
+            const favor = await Favor.findById(req.params.id)
+            favor.comments.push(req.body.comment)
+            await favor.save()
+            res.status(201).json({commentPosted : req.body.comment, favor : favor})
+        }
+    }
+    catch (error) {
+        next(error)
+    }
 })
 
 module.exports = favorsRouter
