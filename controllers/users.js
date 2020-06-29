@@ -1,8 +1,6 @@
 const usersRouter = require("express").Router()
 const User = require("../models/user")
 const bcrypt = require("bcrypt")
-const dns = require('dns')
-
 
 // checking if password is at least 8 char long,
 // has at least one upperCase, one lowerCase and a digit
