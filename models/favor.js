@@ -21,12 +21,8 @@ const favorSchema = mongoose.Schema({
 	},
 	price: Number,
 	comments: Array,
-    // likes: Number,
     location: String,
     accepted: Boolean,
-    // completed: Boolean,
-    // paid_and_rated: Boolean,
-    // completer_rating: Number,
     requester: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
