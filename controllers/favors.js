@@ -27,7 +27,6 @@ favorsRouter.post("/", async (req, res, next) => {
     try {
         const body = req.body
         const user = await getUser(req)
-        console.log(user)
         // the if user is to make sure the request was sent by an actual user through the app
         // only wesleyan students will be able to login so that protects us from non wes students
         if (user) {
@@ -91,6 +90,9 @@ favorsRouter.put('/accept/:id', async (req, res) => {
             const favor = await Favor.findById(req.params.id)
             favor.accepted = true
             await favor.save()
+            user.favors_accepted.push(req.params.id)
+            console.log(user.favors_accepted)
+            await user.save()
             res.status(201).json({ hooray : 'successfully accepted', favor : favor})
         }
     }
