@@ -27,6 +27,7 @@ favorsRouter.post("/", async (req, res, next) => {
     try {
         const body = req.body
         const user = await getUser(req)
+
         // the if user is to make sure the request was sent by an actual user through the app
         // only wesleyan students will be able to login so that protects us from non wes students
         if (user) {
@@ -56,12 +57,19 @@ favorsRouter.post("/", async (req, res, next) => {
     }
 })
 
-favorsRouter.get("/", async (req, res) => {
-    const user = await getUser(req)
+favorsRouter.get("/", async (req, res, next) => {
+    try {
+        const user = await getUser(req)
     if (user) {
         favors = await Favor.find({})
     	res.json(favors.map(u => u.toJSON()))
-    }
+    }  }
+  catch (error) {
+      next(error)
+  }
+    // only have these two lines to allow unauthenticated access
+    // favors = await Favor.find({})
+    // res.json(favors.map(u => u.toJSON()))
 })
 
 favorsRouter.delete('/:id', async (req, res) => {
