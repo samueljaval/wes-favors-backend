@@ -13,6 +13,9 @@ beforeEach(async () => {
     const favorObjects = helper.initialFavors.map(favor => new Favor(favor))
     const promiseArray = favorObjects.map(favor => favor.save())
     await Promise.all(promiseArray)
+    const usersObject = helper.initialUsers.map(user => new User(user))
+    const promiseArrayU = usersObject.map(user => user.save())
+    await Promise.all(promiseArrayU)
 })
 
 describe('sign up users', () => {
@@ -21,18 +24,17 @@ describe('sign up users', () => {
 
         await api
             .post('/api/users')
-            .send({email: "alpggiaz3@wesleyan.edu",
+            .send({email: "piazza@wesleyan.edu",
                    password: "passworD23",
                    name : 'AP',
                    class : 2020,
                    phone : 8609876789,
                })
             .expect(201)
-        const users = await helper.usersInDb()
-        console.log(users)
+
         await api
             .post('/api/users')
-            .send({email: "alpioioggiaz3@wesleyan.edu",
+            .send({email: "javal@wesleyan.edu",
                    password: "passworD23",
                    name : 'AP',
                    class : 2020,
@@ -40,24 +42,16 @@ describe('sign up users', () => {
                })
             .expect(201)
 
-        const users2 = await helper.usersInDb()
-        console.log(users2)
+        await api
+            .post('/api/users')
+            .send({email: "piazza@wesleyan.edu",
+                   password: "passworD23",
+                   name : 'AP',
+                   class : 2020,
+                   phone : 8609876789,
+                })
+            .expect(500)
 
-        //
-        // await api
-        //     .post('/api/users')
-        //     .send({email: "alpiazza13@wesleyan.edu",
-        //            password: "passworD23",
-        //            name : 'AP',
-        //            class : 2020,
-        //            phone : 8609876789,
-        //         })
-        //     .expect(500)
-        //
-        // const users = await helper.usersInDb()
-        // expect(users[0].email).toBe("alpiazza13@wesleyan.edu")
-        // expect(users[1].email).toBe("sam_javal@wesleyan.edu")
-        // expect(users.length).toEqual(2)
     })
 
     test('wrong email at signup', async () => {
@@ -93,63 +87,77 @@ describe('sign up users', () => {
                 })
             .expect(500)
     })
+})
+
+describe("login", () => {
+    test("successful login", async () => {
+        await api
+            .post('/api/login')
+            // we can omit the @wesleyan.edu at login (see users.js)
+            .send({
+                email:"initial@wesleyan.edu",
+                password:"initiaL123"
+            })
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+    })
+
+    test("no login when password wrong", async () => {
+        await api
+            .post('/api/login')
+            .send({email: "initial", password: "password12M"})
+            .expect(401)
+    })
+})
+
+describe("posting favors", () => {
+
+    test("get request of favors", async () => {
+        const users = await helper.usersInDb()
+        const initial = {email: users[0].email, id: users[0].id}
+        const token = jwt.sign(initial, process.env.SECRET)
+
+        await api
+            .get('/api/favors')
+            .set('Authorization', 'bearer ' + token)
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+    })
+
+    test("create favor", async () => {
+
+        const users = await helper.usersInDb()
+        const initial = {email: users[0].email, id: users[0].id}
+        const token = jwt.sign(initial, process.env.SECRET)
+
+        await api
+            .post('/api/favors')
+            .send( {title: 'fake title 1', details: 'fake details 1'} )
+            .set('Authorization', 'bearer ' + token)
+            .expect(201)
+
+        // make sure favore was added to db
+        const favorsNow = await helper.favorsInDb()
+        expect(favorsNow.length).toEqual(2)
+
+        // make sure favor was added to database with the right title
+        const onlyTitles = favorsNow.map(favor => favor.title)
+        expect(onlyTitles).toContain('fake title 1')
+
+        // make sure alex's id was added to that favor as the requester
+        expect(favorsNow[1].requester.toString()).toBe(initial.id)
+
+        // make sure alex's favors list now has that favor's i
+        const id = favorsNow[1].id
+        const usersNow = await helper.usersInDb()
+        const newuser = usersNow[0].favors_requested
+        expect(newuser[0].toString()).toBe(id)
+    })
 
 })
-//
-// test('a lot of stuff', async () => {
-//
-//
-//     // log in alpiazza13
-//     await api
-//     .post('/api/login')
-//     .send({username: "alpiazza13", password: "password"})
-//     .expect(200)
-//     .expect('Content-Type', /application\/json/)
-//
-//     // make sure wrong password fails
-//     await api
-//     .post('/api/login')
-//     .send({username: "alpiazza13", password: "password12"})
-//     .expect(401)
-//
-//     // get alex's info and token
-//     const alex = {username: users[0].username, id: users[0].id}
-//     const token = jwt.sign(alex, process.env.SECRET)
-//
-//     // make sure get request of favors works with alex's credentials
-//     await api
-//     .get('/api/favors')
-//     .set('Authorization', 'bearer ' + token)
-//     .expect(200)
-//     .expect('Content-Type', /application\/json/)
-//
-//     // create favor using alex's account
-//     await api
-//     .post('/api/favors')
-//     .send( {title: 'fake title 1', details: 'fake details 1'} )
-//     .set('Authorization', 'bearer ' + token)
-//     .expect(201)
-//
-//     // make sure favore was added to db
-//     const favorsNow = await helper.favorsInDb()
-//     expect(favorsNow.length).toEqual(2)
-//
-//     // make sure favor was added to database with the right title
-//     const onlyTitles = favorsNow.map(favor => favor.title)
-//     expect(onlyTitles).toContain('fake title 1')
-//
-//     // make sure alex's id was added to that favor as the requester
-//     expect(favorsNow[1].requester.toString()).toBe(alex.id)
-//
-//     // make sure alex's favors list now has that favor's id
-//     const id = favorsNow[1].id
-//     const usersNow = await helper.usersInDb()
-//     const alexFavors = usersNow[0].favors_requested
-//     expect(alexFavors[0].toString()).toBe(id)
-//
-//     // still need to test deleting, commenting accepting
-// })
 
+
+// still need to test deleting, commenting accepting
 
 afterAll(() => {
   mongoose.connection.close()
