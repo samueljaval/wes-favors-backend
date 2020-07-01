@@ -97,9 +97,9 @@ favorsRouter.put('/accept/:id', async (req, res) => {
         if (user) {
             const favor = await Favor.findById(req.params.id)
             favor.accepted = true
+            favor.completer = user.id
             await favor.save()
             user.favors_accepted.push(req.params.id)
-            console.log(user.favors_accepted)
             await user.save()
             res.status(201).json({ hooray : 'successfully accepted', favor : favor})
         }
