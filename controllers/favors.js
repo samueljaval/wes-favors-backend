@@ -72,7 +72,7 @@ favorsRouter.get("/", async (req, res, next) => {
     // res.json(favors.map(u => u.toJSON()))
 })
 
-favorsRouter.delete('/:id', async (req, res) => {
+favorsRouter.delete('/:id', async (req, res, next) => {
     try {
         const user = await getUser(req)
         if (user.favors_requested.includes(req.params.id)) {
@@ -97,9 +97,9 @@ favorsRouter.put('/accept/:id', async (req, res) => {
         if (user) {
             const favor = await Favor.findById(req.params.id)
             favor.accepted = true
+            favor.completer = user.id
             await favor.save()
             user.favors_accepted.push(req.params.id)
-            console.log(user.favors_accepted)
             await user.save()
             res.status(201).json({ hooray : 'successfully accepted', favor : favor})
         }
