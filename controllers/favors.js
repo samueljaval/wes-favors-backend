@@ -72,7 +72,7 @@ favorsRouter.get("/", async (req, res, next) => {
     // res.json(favors.map(u => u.toJSON()))
 })
 
-favorsRouter.delete('/:id', async (req, res) => {
+favorsRouter.delete('/:id', async (req, res, next) => {
     try {
         const user = await getUser(req)
         if (user.favors_requested.includes(req.params.id)) {

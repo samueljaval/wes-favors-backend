@@ -186,7 +186,49 @@ describe("commenting on favors", () => {
 })
 
 describe("deleting favors", () => {
-    // make sure can't delete if not logged in, can't delete if wrong user, successfully deletes if right user
+    
+    test("can't delete if not logged in", async() => {
+        const favorsNow = await helper.favorsInDb()
+        const id = favorsNow[0].id
+        await api
+            .delete(`/api/favors/${id}`)
+            // not sure why 500, just know it should be an error, should look into it
+            .expect(500)
+    })
+
+    test("can't delete if wrong user", async() => {
+        const users = await helper.usersInDb()
+        const initial = {email: users[0].email, id: users[0].id}
+        const token = jwt.sign(initial, process.env.SECRET)
+
+        await api
+            .post('/api/favors')
+            .send( {title: 'fake title 1', details: 'fake details 1'} )
+            .set('Authorization', 'bearer ' + token)
+            .expect(201)
+
+        await api
+            .post('/api/users')
+            .send({email: "javal@wesleyan.edu",
+                   password: "passworD23",
+                   name : 'AP',
+                   class : 2020,
+                   phone : 8609876789,
+               })
+            .expect(201)
+
+            const users2 = await helper.usersInDb()
+            const newUser = {email: users2[1].email, id: users2[1].id}
+            const token2 = jwt.sign(newUser, process.env.SECRET)
+
+            const favorsNow = await helper.favorsInDb()
+            const id = favorsNow[1].id
+
+            await api
+                .delete(`/api/favors/${id}`)
+                .set('Authorization', 'bearer ' + token2)
+                .expect(401)
+    })
 
     test("favor is successfully deleted if right user", async () => {
 
