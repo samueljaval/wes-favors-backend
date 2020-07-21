@@ -3,6 +3,7 @@ const Favor = require("../models/favor")
 const User = require('../models/user')
 const bcrypt = require("bcrypt")
 const jwt = require('jsonwebtoken')
+const Comment = require("../models/comments")
 
 const getTokenFrom = request => {
   const authorization = request.get('authorization')
@@ -34,7 +35,6 @@ favorsRouter.post("/", async (req, res, next) => {
             if (!body.title || !body.details) {
                 return res.status(400).send({error: "either the title or the details of the favor is missing"})
             }
-
             const favor = new Favor({
                 title: body.title,
                 details: body.details,
@@ -91,7 +91,7 @@ favorsRouter.delete('/:id', async (req, res, next) => {
 
 })
 
-favorsRouter.put('/accept/:id', async (req, res) => {
+favorsRouter.put('/accept/:id', async (req, res, next) => {
     try {
         const user = await getUser(req)
         if (user) {
@@ -109,14 +109,41 @@ favorsRouter.put('/accept/:id', async (req, res) => {
     }
 })
 
-favorsRouter.put('/comment/:id', async (req, res) => {
+favorsRouter.put('/comment/:id', async (req, res, next) => {
     try {
         const user = await getUser(req)
         if (user) {
             const favor = await Favor.findById(req.params.id)
-            favor.comments.push(req.body.comment)
+            const comment = new Comment({
+                favor : favor,
+                details : req.body.comment,
+                dateTime : new Date(),
+                user : user.id
+            })
+            const commentSaved = await comment.save()
+            favor.comments.push(commentSaved.id)
             await favor.save()
             res.status(201).json({commentPosted : req.body.comment, favor : favor})
+        }
+    }
+    catch (error) {
+        next(error)
+    }
+})
+
+favorsRouter.delete('/comment/delete/:id', async (req, res, next) => {
+    try {
+        const user = await getUser(req)
+        const comment = await Comment.findById(req.params.id)
+        const favor = await Favor.findById(comment.favor)
+        if (user.id == comment.user) {
+            await Comment.findByIdAndRemove(req.params.id)
+            favor.comments = favor.comments.filter(comment => comment.toString() !== req.params.id)
+            await favor.save()
+            res.status(201).json({ hooray: 'successfully deleted' })
+        }
+        else {
+            return res.status(401).json({ error: 'this user does not own that comment or that comment just does not exist' })
         }
     }
     catch (error) {
