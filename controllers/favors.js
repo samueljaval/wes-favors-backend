@@ -58,18 +58,19 @@ favorsRouter.post("/", async (req, res, next) => {
 })
 
 favorsRouter.get("/", async (req, res, next) => {
-    try {
-        const user = await getUser(req)
-    if (user) {
+     try {
+      const user = await getUser(req)
+      if (user) {
         favors = await Favor.find({})
-    	res.json(favors.map(u => u.toJSON()))
-    }  }
-  catch (error) {
+        res.json(favors.map(u => u.toJSON()))
+      }  
+     }
+   catch (error) {
       next(error)
-  }
+   }
     // only have these two lines to allow unauthenticated access
-    // favors = await Favor.find({})
-    // res.json(favors.map(u => u.toJSON()))
+    //favors = await Favor.find({})
+    //res.json(favors.map(u => u.toJSON()))
 })
 
 favorsRouter.delete('/:id', async (req, res, next) => {
@@ -124,6 +125,26 @@ favorsRouter.put('/comment/:id', async (req, res, next) => {
             favor.comments.push(commentSaved.id)
             await favor.save()
             res.status(201).json({commentPosted : req.body.comment, favor : favor})
+        }
+    }
+    catch (error) {
+        next(error)
+    }
+})
+
+favorsRouter.put('/:id', async (req, res, next) => {
+    try {
+        const user = await getUser(req)
+        if (user) {
+            const body = req.body
+            const favor = {
+              title: body.title,
+              details: body.details,
+              price: body.price,
+              location: body.location
+            }
+            const updateFavor = await Favor.findByIdAndUpdate(req.params.id, favor, { new: true })
+            res.json(updateFavor.toJSON())
         }
     }
     catch (error) {
