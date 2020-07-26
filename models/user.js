@@ -11,7 +11,7 @@ const userSchema = mongoose.Schema({
 		type : String,
 		required : true
 	},
-	class: {
+	Class: {
 		type : Number,			// ex : 2021
 		required : true
 	},

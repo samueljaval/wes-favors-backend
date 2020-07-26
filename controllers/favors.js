@@ -24,6 +24,7 @@ const getUser = async req => {
     return user
 }
 
+// creating a favor
 favorsRouter.post("/", async (req, res, next) => {
     try {
         const body = req.body
@@ -57,13 +58,14 @@ favorsRouter.post("/", async (req, res, next) => {
     }
 })
 
+// getting list of favors
 favorsRouter.get("/", async (req, res, next) => {
      try {
       const user = await getUser(req)
       if (user) {
         favors = await Favor.find({})
         res.json(favors.map(u => u.toJSON()))
-      }  
+      }
      }
    catch (error) {
       next(error)
@@ -73,6 +75,7 @@ favorsRouter.get("/", async (req, res, next) => {
     //res.json(favors.map(u => u.toJSON()))
 })
 
+//deleting favor
 favorsRouter.delete('/:id', async (req, res, next) => {
     try {
         const user = await getUser(req)
@@ -92,6 +95,29 @@ favorsRouter.delete('/:id', async (req, res, next) => {
 
 })
 
+// editing favor
+favorsRouter.put('/:id', async (req, res, next) => {
+    try {
+        const user = await getUser(req)
+        const favor = await Favor.findById(req.params.id)
+        if (user.id == favor.requester) {
+            const body = req.body
+            const favor = {
+              title: body.title,
+              details: body.details,
+              price: body.price,
+              location: body.location
+            }
+            const updateFavor = await Favor.findByIdAndUpdate(req.params.id, favor, { new: true })
+            res.json(updateFavor.toJSON())
+        }
+    }
+    catch (error) {
+        next(error)
+    }
+})
+
+// accepting favor
 favorsRouter.put('/accept/:id', async (req, res, next) => {
     try {
         const user = await getUser(req)
@@ -110,6 +136,7 @@ favorsRouter.put('/accept/:id', async (req, res, next) => {
     }
 })
 
+// commenting favor
 favorsRouter.put('/comment/:id', async (req, res, next) => {
     try {
         const user = await getUser(req)
@@ -132,26 +159,8 @@ favorsRouter.put('/comment/:id', async (req, res, next) => {
     }
 })
 
-favorsRouter.put('/:id', async (req, res, next) => {
-    try {
-        const user = await getUser(req)
-        if (user) {
-            const body = req.body
-            const favor = {
-              title: body.title,
-              details: body.details,
-              price: body.price,
-              location: body.location
-            }
-            const updateFavor = await Favor.findByIdAndUpdate(req.params.id, favor, { new: true })
-            res.json(updateFavor.toJSON())
-        }
-    }
-    catch (error) {
-        next(error)
-    }
-})
 
+// deleting comment (the id is the comment id, not the favor id)
 favorsRouter.delete('/comment/delete/:id', async (req, res, next) => {
     try {
         const user = await getUser(req)
@@ -165,6 +174,24 @@ favorsRouter.delete('/comment/delete/:id', async (req, res, next) => {
         }
         else {
             return res.status(401).json({ error: 'this user does not own that comment or that comment just does not exist' })
+        }
+    }
+    catch (error) {
+        next(error)
+    }
+})
+
+// editing a comment (the id is the comment id, not the favor id)
+favorsRouter.put('/comment/edit/:id', async (req, res, next) => {
+    try {
+        const user = await getUser(req)
+        const comment = await Comment.findById(req.params.id)
+        if (user.id == comment.user) {
+            const body = req.body
+            comment.details = body.comment
+            comment.dateTime = new Date()
+            const updateComment = await Comment.findByIdAndUpdate(req.params.id, comment, { new: true })
+            res.json(updateComment.toJSON())
         }
     }
     catch (error) {
