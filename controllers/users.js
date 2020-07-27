@@ -1,9 +1,14 @@
 const usersRouter = require("express").Router()
 const User = require("../models/user")
 const bcrypt = require("bcrypt")
+const crypto = require('crypto')
+const Token = require("../models/emailToken")
+const sgMail = require('@sendgrid/mail')
+
+
 
 // checking if password is at least 8 char long,
-// has at least one upperCase, one lowerCase and a digit
+// has at leastno one upperCase, one lowerCase and a digit
 const passCheck = (str) => {
     return (/[a-z]/.test(str))
 			&& (/[A-Z]/.test(str))
@@ -21,14 +26,33 @@ usersRouter.post("/", async (req, res, next) => {
 					const user = new User({
 						email: req.body.email,
 						name: req.body.name,
-						class: req.body.class,
+						Class: req.body.Class,
 						phone: req.body.phone,
 						active: false,
 						password: passwordHash
 					})
 					result = await user.save()
-					// a confirmation email will be sent here
-					// user should not be able to login as long as the email is not confirmed
+
+
+                    // Create a verification token for this user
+                    const token = new Token({
+                        user: user.id,
+                        token: crypto.randomBytes(16).toString('hex')
+                    })
+
+                    // sending the verification email with the sendgrid api
+                    // we could consider using the mailgun api for which we get 1 year free with github
+                    sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+                    const msg = {
+                        to: user.email,
+                        from: 'wesfavorsapp@gmail.com',
+                        subject: 'Account Verification Token',
+                        text: 'Your verification token is the following : \n\n' + token.token
+                    }
+                    sgMail.send(msg)
+                    console.log("verification email sent")
+                    token.save()
+
 					res.status(201).json(result)
 				}
 				else {
