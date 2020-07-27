@@ -19,9 +19,11 @@
   },
   "homepage": "https://github.com/samueljaval/wes-favors-backend#readme",
   "dependencies": {
+    "@sendgrid/mail": "^7.2.2",
     "bcrypt": "^5.0.0",
     "cors": "^2.8.5",
     "cross-env": "^7.0.2",
+    "crypto": "^1.0.1",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-async-errors": "^3.1.1",
