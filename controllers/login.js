@@ -67,7 +67,7 @@ loginRouter.post("/verifyToken", async (req,res) => {
 	}
 })
 
-// resending the token created at signup
+// sending a new token 
 loginRouter.post("/resendToken", async (req, res) => {
 	const user = await User.findOne({email : req.body.email})
 	if (user) {
