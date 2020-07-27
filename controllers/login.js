@@ -5,7 +5,7 @@ const User = require("../models/user")
 const Token = require("../models/emailToken")
 const sgMail = require('@sendgrid/mail')
 
-// logging in => getting session token 
+// logging in => getting session token
 loginRouter.post("/", async (request, response) => {
 	const body = request.body
 	let email = ""
@@ -71,21 +71,19 @@ loginRouter.post("/verifyToken", async (req,res) => {
 loginRouter.post("/resendToken", async (req, res) => {
 	const user = await User.findOne({email : req.body.email})
 	if (user) {
-		const token = await Token.findOne({ user: user.id })
-		if (token) {
-			sgMail.setApiKey(process.env.SENDGRID_API_KEY)
-			const msg = {
-				to: user.email,
-				from: 'wesfavorsapp@gmail.com',
-				subject: 'Account Verification Token',
-				text: 'Your verification token is the following : \n\n' + token.token
-			}
-			sgMail.send(msg)
-			return res.status(200).send({msg : "The token was sent to " + user.email})
+		const token = new Token({
+			user: user.id,
+			token: crypto.randomBytes(16).toString('hex')
+		})
+		sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+		const msg = {
+			to: user.email,
+			from: 'wesfavorsapp@gmail.com',
+			subject: 'Account Verification Token',
+			text: 'Your verification token is the following : \n\n' + token
 		}
-		else {
-			return res.status(400).send({msg : "no token was set for this user..."})
-		}
+		sgMail.send(msg)
+		return res.status(200).send({msg : "The token was sent to " + user.email})
 	}
 	else {
 		return res.status(400).send({msg : "No account with this email address"})
