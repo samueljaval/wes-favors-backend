@@ -4,6 +4,7 @@ const User = require('../models/user')
 const bcrypt = require("bcrypt")
 const jwt = require('jsonwebtoken')
 const Comment = require("../models/comments")
+const twilioClient = require('twilio')(process.env.TWILIO_SID, process.env.TWILIO_TOKEN)
 
 const getTokenFrom = request => {
   const authorization = request.get('authorization')
@@ -63,7 +64,7 @@ favorsRouter.get("/", async (req, res, next) => {
       if (user) {
         favors = await Favor.find({})
         res.json(favors.map(u => u.toJSON()))
-      }  
+      }
      }
    catch (error) {
       next(error)
@@ -99,6 +100,15 @@ favorsRouter.put('/accept/:id', async (req, res, next) => {
             const favor = await Favor.findById(req.params.id)
             favor.accepted = true
             favor.completer = user.id
+            const requester = await User.findById(favor.requester)
+            console.log(requester.phone)
+            // send text message
+            await twilioClient.messages
+              .create({
+                 body: 'Hi ' + requester.name + '! ' + user.name + ' has accepted your favor titled: ' + favor.title + '! Here is their phone number: ' + user.phone.toString(),
+                 from: process.env.TWILIO_PHONE_NUMBER,
+                 to: requester.phone
+               })
             await favor.save()
             user.favors_accepted.push(req.params.id)
             await user.save()
