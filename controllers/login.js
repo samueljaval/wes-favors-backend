@@ -4,6 +4,8 @@ const loginRouter = require("express").Router()
 const User = require("../models/user")
 const Token = require("../models/emailToken")
 const sgMail = require('@sendgrid/mail')
+const crypto = require('crypto')
+
 
 // logging in => getting session token
 loginRouter.post("/", async (request, response) => {
@@ -80,7 +82,7 @@ loginRouter.post("/resendToken", async (req, res) => {
 			to: user.email,
 			from: 'wesfavorsapp@gmail.com',
 			subject: 'Account Verification Token',
-			text: 'Your verification token is the following : \n\n' + token
+			text: 'Your verification token is the following : \n\n' + token.token
 		}
 		sgMail.send(msg)
 		return res.status(200).send({msg : "The token was sent to " + user.email})
