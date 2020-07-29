@@ -73,16 +73,22 @@ loginRouter.post("/verifyToken", async (req,res) => {
 loginRouter.post("/resendToken", async (req, res) => {
 	const user = await User.findOne({email : req.body.email})
 	if (user) {
-		const token = new Token({
-			user: user.id,
-			token: crypto.randomBytes(16).toString('hex')
-		})
+		const token = await Token.findOne({user : user.id})
+		let tokenToSend = token
+		if (!token) {
+			const newToken = new Token({
+				user: user.id,
+				token: crypto.randomBytes(16).toString('hex')
+			})
+			newToken.save()
+			tokenToSend = newToken
+		}
 		sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 		const msg = {
 			to: user.email,
 			from: 'wesfavorsapp@gmail.com',
 			subject: 'Account Verification Token',
-			text: 'Your verification token is the following : \n\n' + token.token
+			text: 'Your verification token is the following : \n\n' + tokenToSend.token
 		}
 		sgMail.send(msg)
 		return res.status(200).send({msg : "The token was sent to " + user.email})
