@@ -3,9 +3,7 @@ const User = require("../models/user")
 const bcrypt = require("bcrypt")
 const crypto = require('crypto')
 const Token = require("../models/emailToken")
-const sgMail = require('@sendgrid/mail')
-
-
+const mailgun = require("mailgun-js");
 
 // checking if password is at least 8 char long,
 // has at leastno one upperCase, one lowerCase and a digit
@@ -42,15 +40,17 @@ usersRouter.post("/", async (req, res, next) => {
 
                     // sending the verification email with the sendgrid api
                     // we could consider using the mailgun api for which we get 1 year free with github
-                    sgMail.setApiKey(process.env.SENDGRID_API_KEY)
-                    const msg = {
-                        to: user.email,
-                        from: 'wesfavorsapp@gmail.com',
-                        subject: 'Account Verification Token',
-                        text: 'Your verification token is the following : \n\n' + token.token
-                    }
-                    sgMail.send(msg)
-                    console.log("verification email sent")
+                    const DOMAIN = "wesfavors.me"
+                    const mg = mailgun({apiKey: process.env.API_KEY, domain: DOMAIN});
+                    const data = {
+                    	from: 'notification@wesfavors.me',
+                    	to: user.email,
+                    	subject: 'confirmation email',
+                    	text: 'Your verification token is the following : \n\n' + token.token
+                    };
+                    mg.messages().send(data, function (error, body) {
+                    	console.log(body);
+                    });
                     token.save()
 
 					res.status(201).json(result)
