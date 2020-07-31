@@ -1,9 +1,12 @@
 const jwt = require("jsonwebtoken")
 const bcrypt = require("bcrypt")
+const crypto = require("crypto")
 const loginRouter = require("express").Router()
 const User = require("../models/user")
 const Token = require("../models/emailToken")
 const sgMail = require('@sendgrid/mail')
+const mailgun = require("mailgun-js");
+
 
 // logging in => getting session token
 loginRouter.post("/", async (request, response) => {
@@ -71,18 +74,27 @@ loginRouter.post("/verifyToken", async (req,res) => {
 loginRouter.post("/resendToken", async (req, res) => {
 	const user = await User.findOne({email : req.body.email})
 	if (user) {
-		const token = new Token({
-			user: user.id,
-			token: crypto.randomBytes(16).toString('hex')
-		})
-		sgMail.setApiKey(process.env.SENDGRID_API_KEY)
-		const msg = {
-			to: user.email,
-			from: 'wesfavorsapp@gmail.com',
-			subject: 'Account Verification Token',
-			text: 'Your verification token is the following : \n\n' + token
+		const token = await Token.findOne({user : user.id})
+		let tokenToSend = token
+		if (!token) {
+			const newToken = new Token({
+				user: user.id,
+				token: crypto.randomBytes(16).toString('hex')
+			})
+			newToken.save()
+			tokenToSend = newToken
 		}
-		sgMail.send(msg)
+		const DOMAIN = "wesfavors.me"
+		const mg = mailgun({apiKey: process.env.API_KEY, domain: DOMAIN});
+		const data = {
+			from: 'WesFavors <notification@wesfavors.me>',
+			to: user.email,
+			subject: 'New confirmation token',
+			text: 'Your verification token is the following : \n\n' + tokenToSend.token
+		};
+		mg.messages().send(data, function (error, body) {
+			console.log(body);
+		});
 		return res.status(200).send({msg : "The token was sent to " + user.email})
 	}
 	else {
