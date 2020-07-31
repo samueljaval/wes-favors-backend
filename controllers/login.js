@@ -37,12 +37,11 @@ loginRouter.post("/", async (request, response) => {
 
 			response
 				.status(200)
-				// .send({ token, username: user.username, name: user.name })
-				.send({ token, email: email, name: user.name })
+				.send({ token })
 		}
 		else {
 			return response.status(401).json({
-				error: "account not verified", email : email
+				error: "account not verified"
 			})
 		}
 	}
