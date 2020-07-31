@@ -43,7 +43,7 @@ usersRouter.post("/", async (req, res, next) => {
                     const DOMAIN = "wesfavors.me"
                     const mg = mailgun({apiKey: process.env.API_KEY, domain: DOMAIN});
                     const data = {
-                    	from: 'notification@wesfavors.me',
+                    	from: 'WesFavors <notification@wesfavors.me>',
                     	to: user.email,
                     	subject: 'confirmation email',
                     	text: 'Your verification token is the following : \n\n' + token.token
