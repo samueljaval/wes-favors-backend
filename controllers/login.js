@@ -27,7 +27,7 @@ loginRouter.post("/", async (request, response) => {
 		if (user.active){
 			const userForToken = {
 				// username: user.username,
-				email: user.email,
+				email: email,
 				id: user._id,
 			}
 			const token = jwt.sign(userForToken, process.env.SECRET)
@@ -35,11 +35,11 @@ loginRouter.post("/", async (request, response) => {
 			response
 				.status(200)
 				// .send({ token, username: user.username, name: user.name })
-				.send({ token, email: user.email, name: user.name })
+				.send({ token, email: email, name: user.name })
 		}
 		else {
 			return response.status(401).json({
-				error: "account not verified"
+				error: "account not verified", email : email
 			})
 		}
 	}
@@ -51,7 +51,7 @@ loginRouter.post("/verifyToken", async (req,res) => {
 	if (!token) {
 		return res.status(400).send({ type: 'not-verified', msg: 'We were unable to find a valid token. Your token my have expired.' })
 	}
-	const user = await User.findOne({email : req.body.email})
+	const user = await User.findOne({email : req.body.Email})
 	if (!user) {
 		return res.status(400).send({ msg: 'We were unable to find a user for this token.' })
 	}
@@ -67,7 +67,7 @@ loginRouter.post("/verifyToken", async (req,res) => {
 	}
 })
 
-// sending a new token 
+// sending a new token
 loginRouter.post("/resendToken", async (req, res) => {
 	const user = await User.findOne({email : req.body.email})
 	if (user) {
