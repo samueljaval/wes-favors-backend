@@ -6,8 +6,6 @@ const User = require("../models/user")
 const Token = require("../models/emailToken")
 const sgMail = require('@sendgrid/mail')
 const mailgun = require("mailgun-js");
-const crypto = require('crypto')
-
 
 // logging in => getting session token
 loginRouter.post("/", async (request, response) => {
