@@ -6,6 +6,7 @@ const User = require("../models/user")
 const Token = require("../models/emailToken")
 const sgMail = require('@sendgrid/mail')
 const mailgun = require("mailgun-js");
+const crypto = require('crypto')
 
 
 // logging in => getting session token
@@ -82,6 +83,13 @@ loginRouter.post("/resendToken", async (req, res) => {
 			})
 			newToken.save()
 			tokenToSend = newToken
+		}
+		sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+		const msg = {
+			to: user.email,
+			from: 'wesfavorsapp@gmail.com',
+			subject: 'Account Verification Token',
+			text: 'Your verification token is the following : \n\n' + tokenToSend.token
 		}
 		const DOMAIN = "wesfavors.me"
 		const mg = mailgun({apiKey: process.env.API_KEY, domain: DOMAIN});
