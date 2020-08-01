@@ -1,9 +1,11 @@
 const jwt = require("jsonwebtoken")
 const bcrypt = require("bcrypt")
+const crypto = require("crypto")
 const loginRouter = require("express").Router()
 const User = require("../models/user")
 const Token = require("../models/emailToken")
 const sgMail = require('@sendgrid/mail')
+const mailgun = require("mailgun-js");
 const crypto = require('crypto')
 
 
@@ -29,15 +31,14 @@ loginRouter.post("/", async (request, response) => {
 		if (user.active){
 			const userForToken = {
 				// username: user.username,
-				email: user.email,
+				email: email,
 				id: user._id,
 			}
 			const token = jwt.sign(userForToken, process.env.SECRET)
 
 			response
 				.status(200)
-				// .send({ token, username: user.username, name: user.name })
-				.send({ token, email: user.email, name: user.name })
+				.send({ token })
 		}
 		else {
 			return response.status(401).json({
@@ -53,7 +54,7 @@ loginRouter.post("/verifyToken", async (req,res) => {
 	if (!token) {
 		return res.status(400).send({ type: 'not-verified', msg: 'We were unable to find a valid token. Your token my have expired.' })
 	}
-	const user = await User.findOne({email : req.body.email})
+	const user = await User.findOne({email : req.body.Email})
 	if (!user) {
 		return res.status(400).send({ msg: 'We were unable to find a user for this token.' })
 	}
@@ -69,7 +70,7 @@ loginRouter.post("/verifyToken", async (req,res) => {
 	}
 })
 
-// sending a new token 
+// sending a new token
 loginRouter.post("/resendToken", async (req, res) => {
 	const user = await User.findOne({email : req.body.email})
 	if (user) {
@@ -90,7 +91,17 @@ loginRouter.post("/resendToken", async (req, res) => {
 			subject: 'Account Verification Token',
 			text: 'Your verification token is the following : \n\n' + tokenToSend.token
 		}
-		sgMail.send(msg)
+		const DOMAIN = "wesfavors.me"
+		const mg = mailgun({apiKey: process.env.API_KEY, domain: DOMAIN});
+		const data = {
+			from: 'WesFavors <notification@wesfavors.me>',
+			to: user.email,
+			subject: 'New confirmation token',
+			text: 'Your verification token is the following : \n\n' + tokenToSend.token
+		};
+		mg.messages().send(data, function (error, body) {
+			console.log(body);
+		});
 		return res.status(200).send({msg : "The token was sent to " + user.email})
 	}
 	else {
