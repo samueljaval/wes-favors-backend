@@ -21,6 +21,9 @@ googleRouter.post("/", async (req, res) => {
             return res.status(400).send({error : "problem with Google OAuth"})
         }
         if (email_verified) {
+            // || true is for testing
+            // || true is for testing
+            // || true is for testing
             if (email.includes("@wesleyan.edu") || true) {
                 const user = await User.findOne({email})
                 if (user) {
