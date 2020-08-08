@@ -34,6 +34,7 @@ googleRouter.post("/", async (req, res) => {
                 else {
                     const newUser = new User({
                         email: email,
+                        new_user: true
                     })
                     const response = await newUser.save()
                     const user = await User.findOne({email})

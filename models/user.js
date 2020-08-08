@@ -10,6 +10,9 @@ const userSchema = mongoose.Schema({
 	phone: {
 		type : Number,
 	},
+	new_user : {
+		type : Boolean
+	},
     favors_requested: [
 	    {
 		    type: mongoose.Schema.Types.ObjectId,
