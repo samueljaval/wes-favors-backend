@@ -19,6 +19,7 @@ const favorSchema = mongoose.Schema({
         // commenting this out for now because it's bothering me when testing
 		// required : true,
 	},
+	category: String,
 	price: Number,
 	comments: Array,
     location: String,

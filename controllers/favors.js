@@ -45,6 +45,7 @@ favorsRouter.post("/", async (req, res, next) => {
                 posted_date_time : new Date(),
                 expiration_date_time : body.expiration_date_time,
                 accepted: false,
+                category: body.category,
                 comments: [],
                 requester: user._id
             })
@@ -128,7 +129,7 @@ favorsRouter.put('/accept/:id', async (req, res, next) => {
             favor.completer = user.id
             const requester = await User.findById(favor.requester)
             console.log(requester.phone)
-            // send text message
+            //send text message
             await twilioClient.messages
               .create({
                  body: 'Hi ' + requester.name + '! ' + user.name + ' has accepted your favor titled: ' + favor.title + '! Here is their phone number: ' + user.phone.toString(),
