@@ -136,7 +136,7 @@ favorsRouter.put('/accept/:id', async (req, res, next) => {
             // send text message
             await twilioClient.messages
               .create({
-                 body: 'Hi ' + requester.name + '! ' + user.name + ' has accepted your favor titled: ' + favor.title + '! Here is their phone number: ' + user.phone.toString(),
+                 body: 'Hi ! has accepted your favor titled: ' + favor.title + '! Here is their phone number: ' + user.phone.toString(),
                  from: process.env.TWILIO_PHONE_NUMBER,
                  to: requester.phone
                })
