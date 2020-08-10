@@ -131,7 +131,7 @@ usersRouter.delete("/:id", async (req, res, next) => {
         const allFavors = allFavorsBad.map(favor => favor.toJSON())
         const favorsToUpdate = allFavors.filter(favor => favor.completer == idToDelete)
         const onlyIds = favorsToUpdate.map(favor => favor.id)
-        onlyIds.map(async (id) => {await Favor.findByIdAndUpdate(id, {accepted: false, completer: null})})
+        onlyIds.map(async (id) => {await Favor.findByIdAndUpdate(id, {completer: null})})
         return res.status(201).send({success: "user successfully deleted"})
 	}
 	catch (error) {
