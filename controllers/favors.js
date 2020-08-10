@@ -128,7 +128,6 @@ favorsRouter.put('/accept/:id', async (req, res, next) => {
             favor.accepted = true
             favor.completer = user.id
             const requester = await User.findById(favor.requester)
-            console.log(requester.phone)
             //send text message
             await twilioClient.messages
               .create({
