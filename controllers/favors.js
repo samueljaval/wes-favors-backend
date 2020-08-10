@@ -14,14 +14,15 @@ const getTokenFrom = request => {
   return null
 }
 
-const getUser = async req => {
+const getUser = async (req,res) => {
     const token = getTokenFrom(req)
+    console.log("received", token)
     const decodedToken = jwt.verify(token, process.env.SECRET)
-
     if (!token || !decodedToken.id) {
       return res.status(401).json({ error: 'token missing or invalid' })
     }
     const user = await User.findById(decodedToken.id)
+    console.log(user)
     return user
 }
 
@@ -29,7 +30,7 @@ const getUser = async req => {
 favorsRouter.post("/", async (req, res, next) => {
     try {
         const body = req.body
-        const user = await getUser(req)
+        const user = await getUser(req,res)
 
         // the if user is to make sure the request was sent by an actual user through the app
         // only wesleyan students will be able to login so that protects us from non wes students
@@ -53,6 +54,9 @@ favorsRouter.post("/", async (req, res, next) => {
                 user.favors_requested = user.favors_requested.concat(savedFavor._id)
                 await user.save()
                 res.status(201).json(savedFavor)
+        }
+        else {
+            return res.status(400).send({error : "we have a problem, try logging out and in again"})
         }
     }
     catch (error) {
@@ -128,10 +132,10 @@ favorsRouter.put('/accept/:id', async (req, res, next) => {
             favor.accepted = true
             favor.completer = user.id
             const requester = await User.findById(favor.requester)
-            //send text message
+
             await twilioClient.messages
               .create({
-                 body: 'Hi ' + requester.name + '! ' + user.name + ' has accepted your favor titled: ' + favor.title + '! Here is their phone number: ' + user.phone.toString(),
+                 body: 'Hi ! has accepted your favor titled: ' + favor.title + '! Here is their phone number: ' + user.phone.toString(),
                  from: process.env.TWILIO_PHONE_NUMBER,
                  to: requester.phone
                })

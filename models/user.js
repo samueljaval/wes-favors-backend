@@ -7,24 +7,12 @@ const userSchema = mongoose.Schema({
 		unique : true,
 		required : true,
 	},
-	name: {
-		type : String,
-		required : true
-	},
-	Class: {
-		type : Number,			// ex : 2021
-		required : true
-	},
-	password: {
-		type : String,
-		required : true
-		// having a minlength here is useless because the password will be big after the hash
-	},
 	phone: {
-		type : Number, 			// ex : 8603452333
-		required : true
+		type : Number,
 	},
-	active : Boolean,  // this will be for account verification through email confirmation
+	new_user : {
+		type : Boolean
+	},
     favors_requested: [
 	    {
 		    type: mongoose.Schema.Types.ObjectId,
