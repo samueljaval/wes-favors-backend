@@ -20,8 +20,6 @@ googleRouter.post("/", async (req, res) => {
     }
     if (email_verified) {
         // || true is for testing
-        // || true is for testing
-        // || true is for testing
         if (email.includes("@wesleyan.edu") || true) {
             const user = await User.findOne({email})
             if (user) {
@@ -46,6 +44,8 @@ googleRouter.post("/", async (req, res) => {
         				id: user._id,
         			}
         			const token = jwt.sign(userForToken, process.env.SECRET)
+                    console.log('new user token is: ', token)
+                    console.log('new user id is: ', user.id)
                     res.status(200).send({ token })
                 }
                 else {

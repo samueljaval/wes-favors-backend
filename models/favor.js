@@ -28,10 +28,10 @@ const favorSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
-    completer: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    }
+    completers: Array,
+    minimum_completers_requested: Number,
+    maximum_completers_requested: Number
+
 })
 
 favorSchema.set("toJSON", {
