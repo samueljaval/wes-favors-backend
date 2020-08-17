@@ -48,7 +48,10 @@ favorsRouter.post("/", async (req, res, next) => {
                 accepted: false,
                 category: body.category,
                 comments: [],
-                requester: user._id
+                requester: user._id,
+                minimum_completers_requested: body.min_completers,
+                maximum_completers_requested: body.max_completers
+
             })
                 const savedFavor = await favor.save()
                 user.favors_requested = user.favors_requested.concat(savedFavor._id)
@@ -129,16 +132,18 @@ favorsRouter.put('/accept/:id', async (req, res, next) => {
         const user = await getUser(req)
         if (user) {
             const favor = await Favor.findById(req.params.id)
-            favor.accepted = true
-            favor.completer = user.id
+            favor.completers = favor.completers.concat(user.id)
+            if (favor.completers.length >= favor.minimum_completers_requested) {favor.accepted = true}
+            if (favor.completers.length > favor.maximum_completers_requested) {
+                return res.status(400).json({ error: 'this favor has already been accepted by the requested amount of people' })
+            }
             const requester = await User.findById(favor.requester)
-
-            await twilioClient.messages
-              .create({
-                 body: 'Hi ! has accepted your favor titled: ' + favor.title + '! Here is their phone number: ' + user.phone.toString(),
-                 from: process.env.TWILIO_PHONE_NUMBER,
-                 to: requester.phone
-               })
+            // await twilioClient.messages
+            //   .create({
+            //      body: 'Hi ! has accepted your favor titled: ' + favor.title + '! Here is their phone number: ' + user.phone.toString(),
+            //      from: process.env.TWILIO_PHONE_NUMBER,
+            //      to: requester.phone
+            //    })
             await favor.save()
             user.favors_accepted.push(req.params.id)
             await user.save()

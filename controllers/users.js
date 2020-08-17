@@ -4,17 +4,8 @@ const Favor = require("../models/favor")
 const Comment = require("../models/comments")
 const bcrypt = require("bcrypt")
 const crypto = require('crypto')
-const Token = require("../models/emailToken")
 const mailgun = require("mailgun-js")
 const jwt = require('jsonwebtoken')
-
-const getTokenFrom = request => {
-  const authorization = request.get('authorization')
-  if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
-    return authorization.substring(7)
-  }
-  return null
-}
 
 const getTokenFrom = request => {
   const authorization = request.get('authorization')
@@ -36,27 +27,59 @@ const getUser = async req => {
 }
 
 usersRouter.delete("/:id", async (req, res, next) => {
+    console.log('BEGINNING OF TRYING TO DELETE USER')
 	try {
         const user = await getUser(req)
-        const idToDelete = req.params.id
-
-        if (user.id != idToDelete) {
-            return res.status(400).send({error: "to delete a user you must be logged in as that user"})
+        if (!user) {
+            return res.status(400).send({error: "you must be logged in to delete a user"})
         }
-
+        const idToDelete = req.params.id
+        if (user.id != idToDelete) {
+            return res.status(400).send({error: "you must be logged in as that user to delete it"})
+        }
         const found_user = await User.findById(idToDelete)
         if (!found_user) {
-            return res.status(400).send({error: "no user exists with the id specified"})
+            return res.status(400).send({error: "there was an error finding the user to delete"})
         }
 
-        await User.findByIdAndRemove(idToDelete)
-        await Favor.deleteMany({ requester: idToDelete})
+        const allFavorsList = await Favor.find({})
+        const allFavors = allFavorsList.map(favor => favor.toJSON())
+        const allCommentsList = await Comment.find({})
+        const allComments = allCommentsList.map(comment => comment.toJSON())
+
+        // removing completers where necessary
+        const favorsToBeUnaccepted = allFavors.filter(favor => favor.completers.includes(idToDelete))
+        // not changing favor.accepted, since we currently have no way of knowing whether it's already been completed
+        const favorsUnaccepted = favorsToBeUnaccepted.map(favor => {
+            favor.completers = favor.completers.filter(completer => completer != idToDelete)
+            return favor
+        })
+        favorsUnaccepted.map(async (favor) => {await Favor.findByIdAndUpdate(favor.id, favor)})
+
+        // removing commenters where necesary
+        const allFavorsList2 = await Favor.find({})
+        const allFavors2 = allFavorsList2.map(favor => favor.toJSON())
+        const favorsToDeleteComments = allFavors2.filter(favor => {
+            const commenterUserIds = favor.comments.map(commentId => {
+                const fullComment = allComments.filter(comment => comment.user == idToDelete)[0]
+                const commentUserId = fullComment.user
+                return commentUserId.toString()
+            })
+            return commenterUserIds.includes(idToDelete)
+        })
+        const favorsCommentsDeleted = favorsToDeleteComments.map(favor => {
+            const commentsDeleted = favor.comments.filter(commentId => {
+                const fullComment = allComments.filter(comment => comment.id.toString() == commentId)[0]
+                return (fullComment.user != idToDelete)
+            })
+            favor.comments = commentsDeleted
+            return favor
+        })
+        favorsCommentsDeleted.map(async (favor) => {await Favor.findByIdAndUpdate(favor.id, favor)})
+
         await Comment.deleteMany({ user: idToDelete})
-        const allFavorsBad = await Favor.find({})
-        const allFavors = allFavorsBad.map(favor => favor.toJSON())
-        const favorsToUpdate = allFavors.filter(favor => favor.completer == idToDelete)
-        const onlyIds = favorsToUpdate.map(favor => favor.id)
-        onlyIds.map(async (id) => {await Favor.findByIdAndUpdate(id, {completer: null})})
+        await Favor.deleteMany({ requester: idToDelete})
+        await User.findByIdAndRemove(idToDelete)
         return res.status(201).send({success: "user successfully deleted"})
 	}
 	catch (error) {
